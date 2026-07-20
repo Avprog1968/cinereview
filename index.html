@@ -14,14 +14,16 @@
     .movies { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 20px; }
     .movie-card { background: #1f1f1f; border-radius: 12px; overflow: hidden; cursor: pointer; }
     .search-container { padding: 20px; text-align: center; background: #1a1a1a; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 1000; }
+    button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
+    .search-btn { background: #e50914; color: white; }
+    .popular-btn { background: #e50914; color: white; margin-left: 10px; }
   </style>
 </head>
 <body>
   <nav>
     <div>
-      <a onclick="showSection('home')" style="margin-right:20px;cursor:pointer;">Home</a>
-      <a onclick="showSection('myreviews')" style="cursor:pointer;">My Reviews</a>
+      <a onclick="showSection('home')" style="margin-right:20px;cursor:pointer;color:white;">Home</a>
+      <a onclick="showSection('myreviews')" style="cursor:pointer;color:white;">My Reviews</a>
     </div>
     <div id="userInfo"></div>
   </nav>
@@ -35,8 +37,8 @@
     </div>
     <div class="search-container">
       <input type="text" id="searchInput" placeholder="Search movies..." style="padding:12px; width:300px;">
-      <button onclick="searchMovies()">Search</button>
-      <button onclick="loadPopular()" style="background:#333; margin-left:10px;">Popular</button>
+      <button onclick="searchMovies()" class="search-btn">Search</button>
+      <button onclick="loadPopular()" class="popular-btn">Popular</button>
     </div>
     <div id="moviesContainer" class="movies"></div>
   </div>
@@ -64,7 +66,7 @@
 
     async function fetchMovies(endpoint = 'movie/popular', query = '') {
       const container = document.getElementById('moviesContainer');
-      container.innerHTML = '<p>Loading...</p>';
+      container.innerHTML = '<p>Loading movies...</p>';
       try {
         let url = `${BASE_URL}${endpoint}?api_key=${API_KEY}&language=en-US&page=1`;
         if (query) url += `&query=${encodeURIComponent(query)}`;
@@ -83,7 +85,7 @@
         const card = document.createElement('div');
         card.className = 'movie-card';
         card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}" style="width:100%;"><h3>${movie.title}</h3><p>⭐ ${movie.vote_average?.toFixed(1) || 'N/A'}</p>`;
-        card.onclick = () => alert(`Review for: ${movie.title} (coming soon)`);
+        card.onclick = () => alert(`Review for: ${movie.title}`);
         container.appendChild(card);
       });
     }
@@ -106,7 +108,6 @@
     window.onload = () => {
       showSection('home');
       loadPopular();
-      // Live search as you type
       document.getElementById('searchInput').addEventListener('input', searchMovies);
     };
   </script>
