@@ -8,7 +8,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; }
     nav { background: #1f1f1f; padding: 15px; display: flex; justify-content: center; gap: 30px; position: sticky; top: 0; z-index: 100; }
-    nav a { color: #fff; text-decoration: none; font-weight: 500; }
+    nav a { color: #fff; text-decoration: none; font-weight: 500; cursor: pointer; }
     .hero { height: 500px; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://picsum.photos/id/1015/1920/1080') center/cover; display: flex; align-items: center; justify-content: center; text-align: center; }
     .movies { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
     .movie-card { background: #1f1f1f; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
@@ -23,12 +23,13 @@
     .modal-content { background: #1f1f1f; padding: 25px; max-width: 700px; width: 100%; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
     .close { position: absolute; top: 15px; right: 20px; font-size: 2em; cursor: pointer; color: #aaa; }
     .error { color: #ff6b6b; text-align: center; padding: 40px 20px; }
+    .review-list { margin-top: 15px; padding: 10px; background: #2a2a2a; border-radius: 8px; max-height: 200px; overflow-y: auto; }
   </style>
 </head>
 <body>
   <nav>
-    <a href="#" onclick="fetchPopularMovies()">Home</a>
-    <a href="#">Movies</a>
+    <a onclick="fetchPopularMovies()">Home</a>
+    <a onclick="fetchPopularMovies()">Movies</a>
   </nav>
 
   <div class="hero">
@@ -47,25 +48,31 @@
 
   <div id="moviesContainer" class="movies"></div>
 
-  <!-- Modal (same as before) -->
+  <!-- Review Modal -->
   <div id="reviewModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">×</span>
       <h2 id="modalTitle"></h2>
       <img id="modalPoster" style="width:220px; float:left; margin-right:25px; border-radius:8px;" alt="">
-      <p id="modalOverview" style="line-height:1.6;"></p>
-      <div style="clear:both;">
-        <h3>Write Your Review</h3>
-        <textarea id="userReview" rows="6" style="width:100%; margin:10px 0; padding:12px; background:#333; border:none; border-radius:8px; color:white;" placeholder="What did you think?"></textarea>
-        <input type="number" id="userRating" min="1" max="10" placeholder="Rating (1-10)" style="width:100%; padding:12px; background:#333; border:none; border-radius:8px; color:white; margin-bottom:15px;">
-        <button onclick="submitReview()" style="width:100%; padding:14px; background:#e50914; color:white; border:none; border-radius:8px;">Submit Review</button>
+      <p id="modalOverview" style="line-height:1.6; margin-bottom:15px;"></p>
+      
+      <div id="existingReviews" class="review-list" style="display:none;">
+        <strong>Your Previous Reviews:</strong>
+        <div id="reviewsContainer"></div>
       </div>
+
+      <h3>Write Your Review</h3>
+      <textarea id="userReview" rows="5" style="width:100%; margin:10px 0; padding:12px; background:#333; border:none; border-radius:8px; color:white;" placeholder="What did you think?"></textarea>
+      <input type="number" id="userRating" min="1" max="10" placeholder="Rating (1-10)" style="width:100%; padding:12px; background:#333; border:none; border-radius:8px; color:white; margin-bottom:15px;">
+      <button onclick="submitReview()" style="width:100%; padding:14px; background:#e50914; color:white; border:none; border-radius:8px;">Submit Review</button>
     </div>
   </div>
 
   <script>
     const API_KEY = '8c50a3e883206911d391e40c304deb93';
     const BASE_URL = 'https://api.themoviedb.org/3/';
+    let currentMovie = null;
+    let reviews = JSON.parse(localStorage.getItem('cineReviews')) || {};
 
     async function fetchMovies(endpoint = 'movie/popular', query = '') {
       const container = document.getElementById('moviesContainer');
@@ -74,21 +81,22 @@
       try {
         let url = `${BASE_URL}${endpoint}?api_key=${API_KEY}&language=en-US&page=1`;
         if (query) url += `&query=${encodeURIComponent(query)}`;
-
         const res = await fetch(url);
-        if (!res.ok) throw new Error('Failed to fetch');
+        if (!res.ok) throw new Error('Failed');
         const data = await res.json();
         displayMovies(data.results || []);
       } catch (e) {
-        container.innerHTML = `<div class="error"><p>Error loading movies. Try again.</p></div>`;
-        console.error(e);
+        container.innerHTML = `<div class="error"><p>Error loading. Try again.</p></div>`;
       }
     }
 
     function displayMovies(movies) {
       const container = document.getElementById('moviesContainer');
-      container.innerHTML = movies.length ? '' : '<div class="error"><p>No results found.</p></div>';
-
+      container.innerHTML = '';
+      if (!movies.length) {
+        container.innerHTML = '<div class="error"><p>No results found.</p></div>';
+        return;
+      }
       movies.forEach(m => {
         const card = document.createElement('div');
         card.className = 'movie-card';
@@ -108,26 +116,57 @@
       fetchMovies('movie/popular');
     }
 
-    let currentMovie = null;
     function showReviewModal(movie) {
       currentMovie = movie;
       document.getElementById('modalTitle').textContent = movie.title;
       document.getElementById('modalPoster').src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
       document.getElementById('modalOverview').textContent = movie.overview || 'No overview available.';
+
+      // Show previous reviews for this movie
+      const reviewsDiv = document.getElementById('reviewsContainer');
+      reviewsDiv.innerHTML = '';
+      const movieReviews = reviews[movie.id] || [];
+      if (movieReviews.length > 0) {
+        document.getElementById('existingReviews').style.display = 'block';
+        movieReviews.forEach(r => {
+          const p = document.createElement('p');
+          p.innerHTML = `<strong>${r.rating}/10</strong> - ${r.text}`;
+          reviewsDiv.appendChild(p);
+        });
+      } else {
+        document.getElementById('existingReviews').style.display = 'none';
+      }
+
       document.getElementById('reviewModal').style.display = 'flex';
     }
-    function closeModal() { document.getElementById('reviewModal').style.display = 'none'; }
+
+    function closeModal() {
+      document.getElementById('reviewModal').style.display = 'none';
+      document.getElementById('userReview').value = '';
+      document.getElementById('userRating').value = '';
+    }
+
     function submitReview() {
       const text = document.getElementById('userReview').value.trim();
-      const rating = document.getElementById('userRating').value;
-      if (text && rating) {
-        alert(`Review for "${currentMovie.title}" submitted!\nRating: ${rating}/10`);
-        closeModal();
-      } else alert("Please add review text and rating.");
+      const rating = parseInt(document.getElementById('userRating').value);
+
+      if (!text || !rating) {
+        alert("Please add a review and rating.");
+        return;
+      }
+
+      if (!reviews[currentMovie.id]) reviews[currentMovie.id] = [];
+      reviews[currentMovie.id].push({ rating, text, date: new Date().toLocaleDateString() });
+
+      localStorage.setItem('cineReviews', JSON.stringify(reviews));
+
+      alert(`✅ Review saved for "${currentMovie.title}"!`);
+      closeModal();
+      showReviewModal(currentMovie); // Refresh reviews in modal
     }
 
     window.onload = fetchPopularMovies;
-    document.getElementById('searchInput').addEventListener('input', searchMovies); // Live search
+    document.getElementById('searchInput').addEventListener('input', searchMovies);
   </script>
 </body>
 </html>
