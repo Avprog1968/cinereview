@@ -8,23 +8,20 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #fff; margin:0; padding:0; }
-    nav { background: #1f1f1f; padding: 15px; display: flex; justify-content: space-between; }
-    .nav-links a { color: #fff; margin: 0 15px; cursor: pointer; }
+    body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #fff; margin:0; }
+    nav { background: #1f1f1f; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
     .hero { height: 400px; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://picsum.photos/id/1015/1920/600') center/cover; display: flex; align-items: center; justify-content: center; text-align: center; }
     .movies { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 20px; }
     .movie-card { background: #1f1f1f; border-radius: 12px; overflow: hidden; cursor: pointer; }
     .search-container { padding: 20px; text-align: center; background: #1a1a1a; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 1000; }
-    .modal-content { background: #1f1f1f; padding: 25px; max-width: 600px; width: 90%; border-radius: 12px; }
-    .review-item { background: #2a2a2a; padding: 10px; margin: 8px 0; border-radius: 8px; display: flex; justify-content: space-between; }
   </style>
 </head>
 <body>
   <nav>
-    <div class="nav-links">
-      <a onclick="showSection('home')">Home</a>
-      <a onclick="showSection('myreviews')">My Reviews</a>
+    <div>
+      <a onclick="showSection('home')" style="margin-right:20px; cursor:pointer;">Home</a>
+      <a onclick="showSection('myreviews')" style="cursor:pointer;">My Reviews</a>
     </div>
     <div id="userInfo"></div>
   </nav>
@@ -48,37 +45,32 @@
     <div id="allReviewsContainer"></div>
   </div>
 
-  <div id="reviewModal" class="modal">
-    <div class="modal-content">
-      <h2 id="modalTitle"></h2>
-      <img id="modalPoster" style="width:180px;" alt="">
-      <p id="modalOverview"></p>
-      <textarea id="userReview" rows="4" placeholder="Write your review"></textarea>
-      <input type="number" id="userRating" min="1" max="10" placeholder="Rating 1-10">
-      <button onclick="submitReview()">Submit Review</button>
-      <button onclick="closeModal()">Close</button>
-    </div>
-  </div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDPHrGShGYddwMeNdlZ4lR32BNwB2ixhAI",
+      authDomain: "cinereview-32a24.firebaseapp.com",
+      projectId: "cinereview-32a24",
+      storageBucket: "cinereview-32a24.firebasestorage.app",
+      messagingSenderId: "322771944160",
+      appId: "1:322771944160:web:d7e02cb05604bb3e9ac685"
+    };
 
-  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDPHrGShGYddwMeNdlZ4lR32BNwB2ixhAI",
-    authDomain: "cinereview-32a24.firebaseapp.com",
-    projectId: "cinereview-32a24",
-    storageBucket: "cinereview-32a24.firebasestorage.app",
-    messagingSenderId: "322771944160",
-    appId: "1:322771944160:web:d7e02cb05604bb3e9ac685"
-  };
+    console.log("Firebase connected successfully!");
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+    function showSection(section) {
+      document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
+      document.getElementById('myReviewsSection').style.display = section === 'myreviews' ? 'block' : 'none';
+    }
 
-  console.log("Firebase connected successfully!");
-</script>
+    // Placeholder functions
+    function searchMovies() { alert("Search coming soon with Firebase!"); }
+    function fetchPopularMovies() { console.log("Popular movies would load here"); }
+
+    window.onload = () => showSection('home');
+  </script>
 </body>
 </html>
