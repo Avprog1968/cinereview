@@ -23,30 +23,38 @@
     .modal-content { background: #1f1f1f; padding: 25px; max-width: 700px; width: 100%; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
     .close { position: absolute; top: 15px; right: 20px; font-size: 2em; cursor: pointer; color: #aaa; }
     .error { color: #ff6b6b; text-align: center; padding: 40px 20px; }
-    .review-list { margin-top: 15px; padding: 10px; background: #2a2a2a; border-radius: 8px; max-height: 200px; overflow-y: auto; }
+    .review-item { background: #2a2a2a; padding: 12px; margin: 8px 0; border-radius: 8px; }
   </style>
 </head>
 <body>
   <nav>
-    <a onclick="fetchPopularMovies()">Home</a>
-    <a onclick="fetchPopularMovies()">Movies</a>
+    <a onclick="showSection('home')">Home</a>
+    <a onclick="showSection('myreviews')">My Reviews</a>
   </nav>
 
-  <div class="hero">
-    <div>
-      <h1 style="font-size: 3.5em;">CineReview</h1>
-      <p>Your go-to for honest movie reviews</p>
-      <h2>Discover. Rate. Review.</h2>
+  <div id="homeSection">
+    <div class="hero">
+      <div>
+        <h1 style="font-size: 3.5em;">CineReview</h1>
+        <p>Your go-to for honest movie reviews</p>
+        <h2>Discover. Rate. Review.</h2>
+      </div>
     </div>
+
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search movies...">
+      <button onclick="searchMovies()">Search</button>
+      <button onclick="fetchPopularMovies()" style="background:#333;">Popular</button>
+    </div>
+
+    <div id="moviesContainer" class="movies"></div>
   </div>
 
-  <div class="search-container">
-    <input type="text" id="searchInput" placeholder="Search movies...">
-    <button onclick="searchMovies()">Search</button>
-    <button onclick="fetchPopularMovies()" style="background:#333;">Popular</button>
+  <!-- My Reviews Section -->
+  <div id="myReviewsSection" style="display:none; padding:20px; max-width:1200px; margin:0 auto;">
+    <h1 style="text-align:center; margin-bottom:20px;">My Reviews</h1>
+    <div id="allReviewsContainer"></div>
   </div>
-
-  <div id="moviesContainer" class="movies"></div>
 
   <!-- Review Modal -->
   <div id="reviewModal" class="modal">
@@ -56,9 +64,9 @@
       <img id="modalPoster" style="width:220px; float:left; margin-right:25px; border-radius:8px;" alt="">
       <p id="modalOverview" style="line-height:1.6; margin-bottom:15px;"></p>
       
-      <div id="existingReviews" class="review-list" style="display:none;">
+      <div id="existingReviews" style="display:none; margin-bottom:15px;">
         <strong>Your Previous Reviews:</strong>
-        <div id="reviewsContainer"></div>
+        <div id="reviewsContainer" style="max-height:200px; overflow-y:auto;"></div>
       </div>
 
       <h3>Write Your Review</h3>
@@ -122,7 +130,6 @@
       document.getElementById('modalPoster').src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
       document.getElementById('modalOverview').textContent = movie.overview || 'No overview available.';
 
-      // Show previous reviews for this movie
       const reviewsDiv = document.getElementById('reviewsContainer');
       reviewsDiv.innerHTML = '';
       const movieReviews = reviews[movie.id] || [];
@@ -130,7 +137,8 @@
         document.getElementById('existingReviews').style.display = 'block';
         movieReviews.forEach(r => {
           const p = document.createElement('p');
-          p.innerHTML = `<strong>${r.rating}/10</strong> - ${r.text}`;
+          p.className = 'review-item';
+          p.innerHTML = `<strong>${r.rating}/10</strong> — ${r.text} <small>(${r.date})</small>`;
           reviewsDiv.appendChild(p);
         });
       } else {
@@ -149,23 +157,51 @@
     function submitReview() {
       const text = document.getElementById('userReview').value.trim();
       const rating = parseInt(document.getElementById('userRating').value);
-
-      if (!text || !rating) {
-        alert("Please add a review and rating.");
-        return;
-      }
+      if (!text || !rating) return alert("Please add review and rating.");
 
       if (!reviews[currentMovie.id]) reviews[currentMovie.id] = [];
       reviews[currentMovie.id].push({ rating, text, date: new Date().toLocaleDateString() });
 
       localStorage.setItem('cineReviews', JSON.stringify(reviews));
-
       alert(`✅ Review saved for "${currentMovie.title}"!`);
       closeModal();
-      showReviewModal(currentMovie); // Refresh reviews in modal
+      showReviewModal(currentMovie);
     }
 
-    window.onload = fetchPopularMovies;
+    function showSection(section) {
+      document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
+      document.getElementById('myReviewsSection').style.display = section === 'myreviews' ? 'block' : 'none';
+      
+      if (section === 'myreviews') {
+        renderAllReviews();
+      }
+    }
+
+    function renderAllReviews() {
+      const container = document.getElementById('allReviewsContainer');
+      container.innerHTML = '';
+      let hasReviews = false;
+
+      Object.keys(reviews).forEach(movieId => {
+        const movieReviews = reviews[movieId];
+        movieReviews.forEach(r => {
+          hasReviews = true;
+          const div = document.createElement('div');
+          div.className = 'review-item';
+          div.innerHTML = `<strong>${r.rating}/10</strong> — ${r.text} <small>(${r.date})</small>`;
+          container.appendChild(div);
+        });
+      });
+
+      if (!hasReviews) {
+        container.innerHTML = '<p style="text-align:center; color:#aaa;">You haven\'t written any reviews yet.</p>';
+      }
+    }
+
+    window.onload = () => {
+      showSection('home');
+      fetchPopularMovies();
+    };
     document.getElementById('searchInput').addEventListener('input', searchMovies);
   </script>
 </body>
