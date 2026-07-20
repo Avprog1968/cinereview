@@ -60,34 +60,25 @@
     </div>
   </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDPHrGShGYddwMeNdlZ4lR32BNwB2ixhAI",
-      authDomain: "cinereview-32a24.firebaseapp.com",
-      projectId: "cinereview-32a24",
-      storageBucket: "cinereview-32a24.firebasestorage.app",
-      messagingSenderId: "322771944160",
-      appId: "1:322771944160:web:d7e02cb05604bb3e9ac685"
-    };
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPHrGShGYddwMeNdlZ4lR32BNwB2ixhAI",
+    authDomain: "cinereview-32a24.firebaseapp.com",
+    projectId: "cinereview-32a24",
+    storageBucket: "cinereview-32a24.firebasestorage.app",
+    messagingSenderId: "322771944160",
+    appId: "1:322771944160:web:d7e02cb05604bb3e9ac685"
+  };
 
-    // Basic functions - expand as needed
-    async function fetchPopularMovies() {
-      // Your existing TMDB code here
-      console.log("Popular movies loaded");
-    }
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    function showSection(section) {
-      console.log("Showing section:", section);
-    }
-
-    // Initialize
-    window.onload = () => {
-      fetchPopularMovies();
-    };
-  </script>
+  console.log("Firebase connected successfully!");
+</script>
 </body>
 </html>
