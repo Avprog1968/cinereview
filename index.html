@@ -18,6 +18,7 @@
     .modal-content { background: #1f1f1f; padding: 25px; max-width: 500px; width: 90%; border-radius: 12px; }
     button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
     .red-btn { background: #e50914; color: white; }
+    .review-item { background: #2a2a2a; padding: 12px; margin: 8px 0; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -205,6 +206,22 @@
       }
       document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
       document.getElementById('myReviewsSection').style.display = section === 'myreviews' ? 'block' : 'none';
+      if (section === 'myreviews') loadMyReviews();
+    }
+
+    async function loadMyReviews() {
+      const container = document.getElementById('allReviewsContainer');
+      container.innerHTML = '<p>Loading your reviews...</p>';
+      const snapshot = await db.collection('reviews').where('userId', '==', auth.currentUser.uid).get();
+      container.innerHTML = '';
+      snapshot.forEach(doc => {
+        const r = doc.data();
+        const div = document.createElement('div');
+        div.className = 'review-item';
+        div.innerHTML = `<strong>${r.rating}/10</strong> - ${r.text} <small>(${r.movieTitle}) [${r.status}]</small>`;
+        container.appendChild(div);
+      });
+      if (!snapshot.size) container.innerHTML = '<p>No reviews yet.</p>';
     }
 
     window.onload = () => {
