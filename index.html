@@ -110,6 +110,10 @@
       loadPopular();
       document.getElementById('searchInput').addEventListener('input', searchMovies);
     };
-  </script>
+      // Auto show login if not logged in
+    if (!auth.currentUser) {
+      setTimeout(() => showAuthModal(), 500);
+    }</script>
+    
 </body>
 </html>
