@@ -14,9 +14,10 @@
     .movies { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 20px; }
     .movie-card { background: #1f1f1f; border-radius: 12px; overflow: hidden; cursor: pointer; }
     .search-container { padding: 20px; text-align: center; background: #1a1a1a; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: #1f1f1f; padding: 25px; max-width: 400px; width: 90%; border-radius: 12px; }
     button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
-    .search-btn { background: #e50914; color: white; }
-    .popular-btn { background: #e50914; color: white; margin-left: 10px; }
+    .red-btn { background: #e50914; color: white; }
   </style>
 </head>
 <body>
@@ -25,7 +26,10 @@
       <a onclick="showSection('home')" style="margin-right:20px;cursor:pointer;color:white;">Home</a>
       <a onclick="showSection('myreviews')" style="cursor:pointer;color:white;">My Reviews</a>
     </div>
-    <div id="userInfo"></div>
+    <div id="userInfo" style="display:none;">
+      <span id="welcome"></span>
+      <button onclick="logout()" class="red-btn" style="margin-left:10px;">Logout</button>
+    </div>
   </nav>
 
   <div id="homeSection">
@@ -37,8 +41,8 @@
     </div>
     <div class="search-container">
       <input type="text" id="searchInput" placeholder="Search movies..." style="padding:12px; width:300px;">
-      <button onclick="searchMovies()" class="search-btn">Search</button>
-      <button onclick="loadPopular()" class="popular-btn">Popular</button>
+      <button onclick="searchMovies()" class="red-btn">Search</button>
+      <button onclick="loadPopular()" class="red-btn" style="margin-left:10px;">Popular</button>
     </div>
     <div id="moviesContainer" class="movies"></div>
   </div>
@@ -46,6 +50,18 @@
   <div id="myReviewsSection" style="display:none; padding:20px;">
     <h2>My Reviews</h2>
     <div id="allReviewsContainer">Login to see your reviews.</div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="authModal" class="modal">
+    <div class="modal-content">
+      <h2 id="authTitle">Login</h2>
+      <input type="email" id="email" placeholder="Email" style="width:100%; padding:12px; margin:10px 0; background:#333; border:none; color:white;">
+      <input type="password" id="password" placeholder="Password" style="width:100%; padding:12px; margin:10px 0; background:#333; border:none; color:white;">
+      <button onclick="handleAuth()" class="red-btn" style="width:100%;">Login / Register</button>
+      <button onclick="toggleAuthMode()" id="switchBtn" style="width:100%; margin-top:10px; background:#333;">Create New Account</button>
+      <div id="authMessage" style="margin-top:10px; color:#ff6b6b; text-align:center;"></div>
+    </div>
   </div>
 
   <script>
@@ -59,8 +75,57 @@
     };
 
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
     console.log("Firebase connected successfully!");
 
+    let isLoginMode = true;
+
+    function showAuthModal() {
+      document.getElementById('authModal').style.display = 'flex';
+      document.getElementById('authMessage').textContent = '';
+    }
+
+    function toggleAuthMode() {
+      isLoginMode = !isLoginMode;
+      document.getElementById('authTitle').textContent = isLoginMode ? 'Login' : 'Create Account';
+      document.getElementById('switchBtn').textContent = isLoginMode ? 'Create New Account' : 'Back to Login';
+    }
+
+    async function handleAuth() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const msg = document.getElementById('authMessage');
+
+      try {
+        if (isLoginMode) {
+          await auth.signInWithEmailAndPassword(email, password);
+        } else {
+          await auth.createUserWithEmailAndPassword(email, password);
+        }
+        document.getElementById('authModal').style.display = 'none';
+        updateUserUI();
+      } catch (error) {
+        msg.textContent = error.message;
+      }
+    }
+
+    function logout() {
+      auth.signOut();
+      updateUserUI();
+    }
+
+    function updateUserUI() {
+      const userInfo = document.getElementById('userInfo');
+      if (auth.currentUser) {
+        userInfo.style.display = 'flex';
+        document.getElementById('welcome').textContent = `Hi, ${auth.currentUser.email.split('@')[0]}!`;
+      } else {
+        userInfo.style.display = 'none';
+      }
+    }
+
+    // TMDB Movie Functions
     const API_KEY = '8c50a3e883206911d391e40c304deb93';
     const BASE_URL = 'https://api.themoviedb.org/3/';
 
@@ -85,7 +150,7 @@
         const card = document.createElement('div');
         card.className = 'movie-card';
         card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}" style="width:100%;"><h3>${movie.title}</h3><p>⭐ ${movie.vote_average?.toFixed(1) || 'N/A'}</p>`;
-        card.onclick = () => alert(`Review for: ${movie.title}`);
+        card.onclick = () => alert(`Review for: ${movie.title} (coming soon)`);
         container.appendChild(card);
       });
     }
@@ -101,6 +166,10 @@
     }
 
     function showSection(section) {
+      if (section === 'myreviews' && !auth.currentUser) {
+        showAuthModal();
+        return;
+      }
       document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
       document.getElementById('myReviewsSection').style.display = section === 'myreviews' ? 'block' : 'none';
     }
@@ -109,11 +178,9 @@
       showSection('home');
       loadPopular();
       document.getElementById('searchInput').addEventListener('input', searchMovies);
+      auth.onAuthStateChanged(updateUserUI);
+      if (!auth.currentUser) setTimeout(showAuthModal, 800);
     };
-      // Auto show login if not logged in
-    if (!auth.currentUser) {
-      setTimeout(() => showAuthModal(), 500);
-    }</script>
-    
+  </script>
 </body>
 </html>
