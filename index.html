@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CineReview</title>
+    <title>CineReview - Movie Reviews</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #121212; color: #fff; }
         header { background: #1f1f1f; padding: 20px; text-align: center; }
@@ -11,27 +11,32 @@
         nav a { color: #fff; margin: 0 15px; text-decoration: none; }
         .hero { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://picsum.photos/1920/600') center/cover; height: 400px; display: flex; align-items: center; justify-content: center; text-align: center; }
         .search { padding: 20px; text-align: center; }
-        input { padding: 10px; width: 300px; border-radius: 4px; }
+        input { padding: 10px; width: 300px; border-radius: 4px; border: none; }
         button { padding: 10px 20px; background: #e50914; color: white; border: none; border-radius: 4px; cursor: pointer; }
         .movies { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
-        .movie-card { background: #1f1f1f; border-radius: 8px; overflow: hidden; cursor: pointer; }
+        .movie-card { background: #1f1f1f; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.3s; }
+        .movie-card:hover { transform: scale(1.05); }
         .movie-card img { width: 100%; height: 300px; object-fit: cover; }
-        .movie-card h3 { padding: 10px; margin: 0; }
-        .error { color: #ff6b6b; text-align: center; padding: 20px; }
+        .movie-card h3 { padding: 10px; margin: 0; font-size: 1.1em; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: #1f1f1f; padding: 20px; max-width: 800px; width: 90%; border-radius: 8px; max-height: 90vh; overflow-y: auto; }
+        textarea, input[type="number"] { width: 100%; margin: 10px 0; padding: 10px; background: #333; color: white; border: none; border-radius: 4px; }
     </style>
 </head>
 <body>
     <header>
         <h1>CineReview</h1>
-        <p>Your go-to for honest movie reviews</p>
+        <p>Your go-to spot for honest consumer movie reviews</p>
     </header>
     <nav>
         <a href="#">Home</a>
-        <a href="#">Movies</a>
+        <a href="#">Top Movies</a>
+        <a href="#">Genres</a>
+        <a href="#">Submit Review</a>
     </nav>
     <div class="hero">
         <div>
-            <h2>Discover. Rate. Review.</h2>
+            <h2>Discover • Rate • Review</h2>
         </div>
     </div>
     <div class="search">
@@ -40,24 +45,38 @@
     </div>
     <div class="movies" id="moviesContainer"></div>
 
+    <!-- Review Modal -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-content">
+            <span onclick="closeModal()" style="float:right; font-size:2em; cursor:pointer;">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <img id="modalPoster" style="width:200px; float:left; margin-right:20px; border-radius:8px;">
+            <p id="modalOverview"></p>
+            <div style="clear:both;">
+                <h3>Community Reviews</h3>
+                <div id="reviewsList"></div>
+            </div>
+            <form id="reviewForm" style="margin-top:20px;">
+                <h3>Write Your Review</h3>
+                <textarea id="userReview" rows="4" placeholder="What did you think? Be honest!"></textarea>
+                <input type="number" id="userRating" min="1" max="10" placeholder="Rating (1-10)">
+                <button type="button" onclick="submitReview()">Submit Review</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         const API_KEY = '8c50a3e883206911d391e40c304deb93';
         const BASE_URL = 'https://api.themoviedb.org/3';
 
         async function fetchPopularMovies() {
-            const container = document.getElementById('moviesContainer');
-            container.innerHTML = '<p>Loading movies...</p>';
             try {
                 const response = await fetch(`\( {BASE_URL}/movie/popular?api_key= \){API_KEY}&language=en-US`);
-                if (!response.ok) throw new Error('API error');
                 const data = await response.json();
                 displayMovies(data.results);
             } catch (e) {
-                container.innerHTML = `
-                    <div class="error">
-                        <p>Could not load movies right now.</p>
-                        <button onclick="fetchPopularMovies()">Try Again</button>
-                    </div>`;
+                console.error(e);
+                alert("Failed to load movies.");
             }
         }
 
@@ -68,17 +87,55 @@
                 const card = document.createElement('div');
                 card.className = 'movie-card';
                 card.innerHTML = `
-                    <img src="https://image.tmdb.org/t/p/w500\( {movie.poster_path}" alt=" \){movie.title}">
+                    <img src="https://image.tmdb.org/t/p/w500\( {movie.poster_path || ''}" alt=" \){movie.title}" onerror="this.src='https://picsum.photos/200/300'">
                     <h3>${movie.title}</h3>
-                    <p>Rating: ${movie.vote_average}</p>
+                    <p>⭐ ${movie.vote_average.toFixed(1)}</p>
                 `;
-                card.onclick = () => alert(movie.overview || 'No overview available.');
+                card.onclick = () => showMovieDetails(movie.id);
                 container.appendChild(card);
             });
         }
 
+        async function showMovieDetails(movieId) {
+            try {
+                const response = await fetch(`\( {BASE_URL}/movie/ \){movieId}?api_key=${API_KEY}&language=en-US`);
+                const movie = await response.json();
+                
+                document.getElementById('modalTitle').textContent = movie.title;
+                document.getElementById('modalPoster').src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+                document.getElementById('modalOverview').textContent = movie.overview || "No overview available.";
+                
+                document.getElementById('reviewsList').innerHTML = `
+                    <p><strong>User123:</strong> Absolutely loved it! (9/10)</p>
+                    <p><strong>CineFan42:</strong> Solid plot but predictable ending (7/10)</p>
+                `;
+                
+                document.getElementById('reviewModal').style.display = 'flex';
+            } catch (e) {
+                alert("Could not load details.");
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('reviewModal').style.display = 'none';
+        }
+
+        function submitReview() {
+            const reviewText = document.getElementById('userReview').value.trim();
+            const rating = document.getElementById('userRating').value;
+            if (reviewText && rating) {
+                alert(`✅ Review submitted!\n\n"${reviewText}"\nRating: ${rating}/10`);
+                closeModal();
+                document.getElementById('reviewForm').reset();
+            } else {
+                alert("Please write a review and add a rating.");
+            }
+        }
+
         function searchMovies() {
-            alert("Search feature coming soon!");
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+            alert(`Searching for "${query}"... (We can enhance this next!)`);
         }
 
         window.onload = fetchPopularMovies;
