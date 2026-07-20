@@ -18,7 +18,6 @@
     .modal-content { background: #1f1f1f; padding: 25px; max-width: 500px; width: 90%; border-radius: 12px; }
     button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
     .red-btn { background: #e50914; color: white; }
-    .review-item { background: #2a2a2a; padding: 12px; margin: 8px 0; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -73,7 +72,7 @@
       <p id="modalOverview"></p>
       <textarea id="userReview" rows="4" placeholder="Write your review here..." style="width:100%; margin:10px 0; padding:10px;"></textarea>
       <input type="number" id="userRating" min="1" max="10" placeholder="Rating (1-10)" style="width:100%; padding:10px; margin-bottom:10px;">
-      <button onclick="submitReview()" class="red-btn" style="width:100%;">Submit Review</button>
+      <button onclick="submitReview()" class="red-btn" style="width:100%;">Submit Review (for approval)</button>
       <button onclick="closeModal()" style="width:100%; margin-top:8px; background:#333;">Close</button>
     </div>
   </div>
@@ -187,10 +186,11 @@
         userEmail: auth.currentUser.email,
         rating: rating,
         text: text,
+        status: "pending",
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      alert("Review submitted successfully! Visible to everyone.");
+      alert("Review submitted for approval!");
       closeModal();
     }
 
@@ -205,38 +205,12 @@
       }
       document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
       document.getElementById('myReviewsSection').style.display = section === 'myreviews' ? 'block' : 'none';
-      if (section === 'myreviews') loadMyReviews();
-    }
-
-    async function loadMyReviews() {
-      const container = document.getElementById('allReviewsContainer');
-      container.innerHTML = '<p>Loading your reviews...</p>';
-      const snapshot = await db.collection('reviews').where('userId', '==', auth.currentUser.uid).get();
-      container.innerHTML = '';
-      snapshot.forEach(doc => {
-        const r = doc.data();
-        const div = document.createElement('div');
-        div.className = 'review-item';
-        div.innerHTML = `<strong>${r.rating}/10</strong> - ${r.text} <small>(${r.movieTitle})</small>`;
-        container.appendChild(div);
-      });
-      if (!snapshot.size) container.innerHTML = '<p>No reviews yet.</p>';
-    }
-
-    function logout() {
-      auth.signOut();
     }
 
     window.onload = () => {
       showSection('home');
       loadPopular();
       document.getElementById('searchInput').addEventListener('input', searchMovies);
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          document.getElementById('userInfo').style.display = 'flex';
-          document.getElementById('welcome').textContent = `Hi, ${user.email.split('@')[0]}!`;
-        }
-      });
     };
   </script>
 </body>
