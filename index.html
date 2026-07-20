@@ -6,152 +6,59 @@
   <title>CineReview</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
-      background: #0f0f0f; 
-      color: #fff; 
-    }
-    nav { 
-      background: #1f1f1f; 
-      padding: 15px; 
-      display: flex; 
-      justify-content: center; 
-      gap: 30px; 
-      position: sticky; 
-      top: 0; 
-      z-index: 100; 
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; }
+    nav { background: #1f1f1f; padding: 15px; display: flex; justify-content: center; gap: 30px; position: sticky; top: 0; z-index: 100; }
     nav a { color: #fff; text-decoration: none; font-weight: 500; }
-    .hero { 
-      height: 500px; 
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://picsum.photos/id/1015/1920/1080') center/cover; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      text-align: center; 
-      position: relative; 
-    }
-    .hero-content { z-index: 2; }
-    .movies { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-      gap: 20px; 
-      padding: 20px; 
-      max-width: 1400px; 
-      margin: 0 auto; 
-    }
-    .movie-card { 
-      background: #1f1f1f; 
-      border-radius: 12px; 
-      overflow: hidden; 
-      cursor: pointer; 
-      transition: transform 0.2s; 
-    }
+    .hero { height: 500px; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://picsum.photos/id/1015/1920/1080') center/cover; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .movies { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+    .movie-card { background: #1f1f1f; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
     .movie-card:hover { transform: scale(1.05); }
     .movie-card img { width: 100%; height: 270px; object-fit: cover; }
     .movie-card h3 { padding: 12px 12px 4px; font-size: 1.1em; }
     .movie-card p { padding: 0 12px 12px; color: #aaa; font-size: 0.95em; }
-    .search { 
-      padding: 20px; 
-      text-align: center; 
-      background: #1a1a1a; 
-    }
-    .search input { 
-      padding: 14px; 
-      width: 70%; 
-      max-width: 500px; 
-      border: none; 
-      border-radius: 8px 0 0 8px; 
-      font-size: 1.1em; 
-    }
-    .search button { 
-      padding: 14px 28px; 
-      border: none; 
-      background: #e50914; 
-      color: white; 
-      border-radius: 0 8px 8px 0; 
-      font-size: 1.1em; 
-      cursor: pointer; 
-    }
-    .modal { 
-      display: none; 
-      position: fixed; 
-      top: 0; left: 0; 
-      width: 100%; height: 100%; 
-      background: rgba(0,0,0,0.95); 
-      align-items: center; 
-      justify-content: center; 
-      z-index: 2000; 
-      padding: 20px; 
-    }
-    .modal-content { 
-      background: #1f1f1f; 
-      padding: 25px; 
-      max-width: 700px; 
-      width: 100%; 
-      border-radius: 12px; 
-      position: relative; 
-      max-height: 90vh; 
-      overflow-y: auto; 
-    }
-    .close { 
-      position: absolute; 
-      top: 15px; 
-      right: 20px; 
-      font-size: 2em; 
-      cursor: pointer; 
-      color: #aaa; 
-    }
-    .error { 
-      color: #ff6b6b; 
-      text-align: center; 
-      padding: 40px 20px; 
-      font-size: 1.1em; 
-    }
-    .error button { 
-      margin-top: 15px; 
-      padding: 12px 30px; 
-      background: #e50914; 
-      color: white; 
-      border: none; 
-      border-radius: 6px; 
-      cursor: pointer; 
-    }
+    .search-container { padding: 20px; text-align: center; background: #1a1a1a; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .search-container input { padding: 14px; width: 350px; max-width: 100%; border: none; border-radius: 8px; font-size: 1.1em; }
+    .search-container button { padding: 14px 24px; border: none; background: #e50914; color: white; border-radius: 8px; cursor: pointer; font-size: 1.1em; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+    .modal-content { background: #1f1f1f; padding: 25px; max-width: 700px; width: 100%; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
+    .close { position: absolute; top: 15px; right: 20px; font-size: 2em; cursor: pointer; color: #aaa; }
+    .error { color: #ff6b6b; text-align: center; padding: 40px 20px; }
   </style>
 </head>
 <body>
   <nav>
-    <a href="#">Home</a>
+    <a href="#" onclick="fetchPopularMovies()">Home</a>
     <a href="#">Movies</a>
   </nav>
 
   <div class="hero">
-    <div class="hero-content">
-      <h1 style="font-size: 3.5em; margin-bottom: 10px;">CineReview</h1>
-      <p style="font-size: 1.3em; margin-bottom: 10px;">Your go-to for honest movie reviews</p>
-      <h2 style="font-size: 2em;">Discover. Rate. Review.</h2>
+    <div>
+      <h1 style="font-size: 3.5em;">CineReview</h1>
+      <p>Your go-to for honest movie reviews</p>
+      <h2>Discover. Rate. Review.</h2>
     </div>
   </div>
 
-  <div class="search">
+  <div class="search-container">
     <input type="text" id="searchInput" placeholder="Search movies...">
     <button onclick="searchMovies()">Search</button>
+    <button onclick="fetchPopularMovies()" style="background:#333;">Popular</button>
   </div>
 
   <div id="moviesContainer" class="movies"></div>
 
-  <!-- Review Modal -->
+  <!-- Modal (same as before) -->
   <div id="reviewModal" class="modal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <h2 id="modalTitle" style="margin-bottom: 15px;"></h2>
-      <img id="modalPoster" style="width: 220px; float: left; margin-right: 25px; border-radius: 8px;" alt="">
-      <p id="modalOverview" style="line-height: 1.6; margin-bottom: 20px;"></p>
-      <div style="clear: both;">
+      <span class="close" onclick="closeModal()">×</span>
+      <h2 id="modalTitle"></h2>
+      <img id="modalPoster" style="width:220px; float:left; margin-right:25px; border-radius:8px;" alt="">
+      <p id="modalOverview" style="line-height:1.6;"></p>
+      <div style="clear:both;">
         <h3>Write Your Review</h3>
-        <textarea id="userReview" rows="6" style="width:100%; margin: 10px 0; padding: 12px; background:#333; border:none; border-radius:8px; color:white;" placeholder="What did you think? Be honest!"></textarea>
+        <textarea id="userReview" rows="6" style="width:100%; margin:10px 0; padding:12px; background:#333; border:none; border-radius:8px; color:white;" placeholder="What did you think?"></textarea>
         <input type="number" id="userRating" min="1" max="10" placeholder="Rating (1-10)" style="width:100%; padding:12px; background:#333; border:none; border-radius:8px; color:white; margin-bottom:15px;">
-        <button onclick="submitReview()" style="width:100%; padding:14px; background:#e50914; color:white; border:none; border-radius:8px; font-size:1.1em;">Submit Review</button>
+        <button onclick="submitReview()" style="width:100%; padding:14px; background:#e50914; color:white; border:none; border-radius:8px;">Submit Review</button>
       </div>
     </div>
   </div>
@@ -168,63 +75,59 @@
         let url = `${BASE_URL}${endpoint}?api_key=${API_KEY}&language=en-US&page=1`;
         if (query) url += `&query=${encodeURIComponent(query)}`;
 
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`API error: ${response.status}`);
-        
-        const data = await response.json();
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
         displayMovies(data.results || []);
-      } catch (error) {
-        console.error(error);
-        container.innerHTML = `
-          <div class="error">
-            <p>Could not load movies.<br><small>${error.message}</small></p>
-            <button onclick="fetchPopularMovies()">Try Again</button>
-          </div>
-        `;
+      } catch (e) {
+        container.innerHTML = `<div class="error"><p>Error loading movies. Try again.</p></div>`;
+        console.error(e);
       }
     }
 
     function displayMovies(movies) {
       const container = document.getElementById('moviesContainer');
-      container.innerHTML = '';
-      
-      if (movies.length === 0) {
-        container.innerHTML = '<div class="error"><p>No results found.</p></div>';
-        return;
-      }
+      container.innerHTML = movies.length ? '' : '<div class="error"><p>No results found.</p></div>';
 
-      movies.forEach(movie => {
+      movies.forEach(m => {
         const card = document.createElement('div');
         card.className = 'movie-card';
-        card.innerHTML = `
-          <img src="https://image.tmdb.org/t/p/w500${movie.poster_path || ''}" 
-               alt="${movie.title}" 
-               onerror="this.src='https://via.placeholder.com/500x750?text=No+Image'">
-          <h3>${movie.title}</h3>
-          <p>⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</p>
-        `;
-        card.onclick = () => showReviewModal(movie);
+        card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${m.poster_path}" alt="${m.title}" onerror="this.src='https://via.placeholder.com/500x750?text=No+Image'"><h3>${m.title}</h3><p>⭐ ${m.vote_average?.toFixed(1) || 'N/A'}</p>`;
+        card.onclick = () => showReviewModal(m);
         container.appendChild(card);
       });
     }
 
-    // Search function
     function searchMovies() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) {
-        fetchPopularMovies();
-        return;
-      }
-      fetchMovies('search/movie', query);
+      const q = document.getElementById('searchInput').value.trim();
+      fetchMovies(q ? 'search/movie' : 'movie/popular', q);
     }
 
     function fetchPopularMovies() {
+      document.getElementById('searchInput').value = '';
       fetchMovies('movie/popular');
     }
 
     let currentMovie = null;
-
     function showReviewModal(movie) {
       currentMovie = movie;
       document.getElementById('modalTitle').textContent = movie.title;
-      const poster = document.getElementById('
+      document.getElementById('modalPoster').src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+      document.getElementById('modalOverview').textContent = movie.overview || 'No overview available.';
+      document.getElementById('reviewModal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('reviewModal').style.display = 'none'; }
+    function submitReview() {
+      const text = document.getElementById('userReview').value.trim();
+      const rating = document.getElementById('userRating').value;
+      if (text && rating) {
+        alert(`Review for "${currentMovie.title}" submitted!\nRating: ${rating}/10`);
+        closeModal();
+      } else alert("Please add review text and rating.");
+    }
+
+    window.onload = fetchPopularMovies;
+    document.getElementById('searchInput').addEventListener('input', searchMovies); // Live search
+  </script>
+</body>
+</html>
