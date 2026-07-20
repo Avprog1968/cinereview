@@ -163,14 +163,17 @@
       fetchMovies('movie/popular');
     }
 
-    let currentMovie = null;
-
     function showReviewModal(movie) {
       if (!auth.currentUser) return alert("Please login first.");
       currentMovie = movie;
       document.getElementById('modalTitle').textContent = movie.title;
       document.getElementById('modalPoster').src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
       document.getElementById('modalOverview').textContent = movie.overview || 'No overview available.';
+      
+      // Clear fields
+      document.getElementById('userReview').value = '';
+      document.getElementById('userRating').value = '';
+      
       document.getElementById('reviewModal').style.display = 'flex';
     }
 
