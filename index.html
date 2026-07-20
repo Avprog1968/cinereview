@@ -9,7 +9,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
   <style>
     body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #fff; margin:0; }
-    nav { background: #1f1f1f; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+    nav { background: #1f1f1f; padding: 15px; display: flex; justify-content: space-between; }
     .hero { height: 400px; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://picsum.photos/id/1015/1920/600') center/cover; display: flex; align-items: center; justify-content: center; text-align: center; }
     .movies { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 20px; }
     .movie-card { background: #1f1f1f; border-radius: 12px; overflow: hidden; cursor: pointer; }
@@ -20,7 +20,7 @@
 <body>
   <nav>
     <div>
-      <a onclick="showSection('home')" style="margin-right:20px; cursor:pointer;">Home</a>
+      <a onclick="showSection('home')" style="margin-right:20px;cursor:pointer;">Home</a>
       <a onclick="showSection('myreviews')" style="cursor:pointer;">My Reviews</a>
     </div>
     <div id="userInfo"></div>
@@ -42,7 +42,7 @@
 
   <div id="myReviewsSection" style="display:none; padding:20px;">
     <h2>My Reviews</h2>
-    <div id="allReviewsContainer"></div>
+    <div id="allReviewsContainer">Login to see your reviews.</div>
   </div>
 
   <script>
@@ -61,16 +61,49 @@
 
     console.log("Firebase connected successfully!");
 
+    const API_KEY = '8c50a3e883206911d391e40c304deb93';
+    const BASE_URL = 'https://api.themoviedb.org/3/';
+
+    async function fetchMovies(endpoint = 'movie/popular', query = '') {
+      const container = document.getElementById('moviesContainer');
+      container.innerHTML = '<p>Loading movies...</p>';
+      try {
+        let url = `${BASE_URL}${endpoint}?api_key=${API_KEY}&language=en-US&page=1`;
+        if (query) url += `&query=${encodeURIComponent(query)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        displayMovies(data.results || []);
+      } catch (e) {
+        container.innerHTML = '<p>Error loading movies.</p>';
+      }
+    }
+
+    function displayMovies(movies) {
+      const container = document.getElementById('moviesContainer');
+      container.innerHTML = '';
+      movies.forEach(movie => {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+        card.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}" style="width:100%;"><h3>${movie.title}</h3><p>⭐ ${movie.vote_average}</p>`;
+        card.onclick = () => alert(`Review modal for ${movie.title} (coming soon)`);
+        container.appendChild(card);
+      });
+    }
+
+    function searchMovies() {
+      const q = document.getElementById('searchInput').value.trim();
+      fetchMovies(q ? 'search/movie' : 'movie/popular', q);
+    }
+
     function showSection(section) {
       document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
       document.getElementById('myReviewsSection').style.display = section === 'myreviews' ? 'block' : 'none';
     }
 
-    // Placeholder functions
-    function searchMovies() { alert("Search coming soon with Firebase!"); }
-    function fetchPopularMovies() { console.log("Popular movies would load here"); }
-
-    window.onload = () => showSection('home');
+    window.onload = () => {
+      showSection('home');
+      fetchMovies('movie/popular');
+    };
   </script>
 </body>
 </html>
