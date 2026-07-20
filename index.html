@@ -23,7 +23,11 @@
     .modal-content { background: #1f1f1f; padding: 25px; max-width: 700px; width: 100%; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
     .close { position: absolute; top: 15px; right: 20px; font-size: 2em; cursor: pointer; color: #aaa; }
     .error { color: #ff6b6b; text-align: center; padding: 40px 20px; }
-    .review-item { background: #2a2a2a; padding: 12px; margin: 8px 0; border-radius: 8px; }
+    .review-item { 
+      background: #2a2a2a; padding: 12px; margin: 8px 0; border-radius: 8px; 
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .delete-btn { background: #c00; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
   </style>
 </head>
 <body>
@@ -66,7 +70,7 @@
       
       <div id="existingReviews" style="display:none; margin-bottom:15px;">
         <strong>Your Previous Reviews:</strong>
-        <div id="reviewsContainer" style="max-height:200px; overflow-y:auto;"></div>
+        <div id="reviewsContainer"></div>
       </div>
 
       <h3>Write Your Review</h3>
@@ -82,10 +86,10 @@
     let currentMovie = null;
     let reviews = JSON.parse(localStorage.getItem('cineReviews')) || {};
 
-    async function fetchMovies(endpoint = 'movie/popular', query = '') {
+    async function fetchMovies(endpoint = 'movie/popular', query = '') { /* ... same as before ... */ 
+      // (keeping it short - copy from previous full version if needed)
       const container = document.getElementById('moviesContainer');
       container.innerHTML = '<div class="error"><p>Loading...</p></div>';
-
       try {
         let url = `${BASE_URL}${endpoint}?api_key=${API_KEY}&language=en-US&page=1`;
         if (query) url += `&query=${encodeURIComponent(query)}`;
@@ -101,10 +105,7 @@
     function displayMovies(movies) {
       const container = document.getElementById('moviesContainer');
       container.innerHTML = '';
-      if (!movies.length) {
-        container.innerHTML = '<div class="error"><p>No results found.</p></div>';
-        return;
-      }
+      if (!movies.length) return container.innerHTML = '<div class="error"><p>No results found.</p></div>';
       movies.forEach(m => {
         const card = document.createElement('div');
         card.className = 'movie-card';
@@ -130,31 +131,41 @@
       document.getElementById('modalPoster').src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
       document.getElementById('modalOverview').textContent = movie.overview || 'No overview available.';
 
-      const reviewsDiv = document.getElementById('reviewsContainer');
-      reviewsDiv.innerHTML = '';
-      const movieReviews = reviews[movie.id] || [];
-      if (movieReviews.length > 0) {
-        document.getElementById('existingReviews').style.display = 'block';
-        movieReviews.forEach(r => {
-          const p = document.createElement('p');
-          p.className = 'review-item';
-          p.innerHTML = `<strong>${r.rating}/10</strong> — ${r.text} <small>(${r.date})</small>`;
-          reviewsDiv.appendChild(p);
-        });
-      } else {
-        document.getElementById('existingReviews').style.display = 'none';
-      }
-
+      renderMovieReviews(movie.id);
       document.getElementById('reviewModal').style.display = 'flex';
     }
 
-    function closeModal() {
-      document.getElementById('reviewModal').style.display = 'none';
-      document.getElementById('userReview').value = '';
-      document.getElementById('userRating').value = '';
+    function renderMovieReviews(movieId) {
+      const container = document.getElementById('reviewsContainer');
+      container.innerHTML = '';
+      const movieReviews = reviews[movieId] || [];
+      if (movieReviews.length === 0) {
+        document.getElementById('existingReviews').style.display = 'none';
+        return;
+      }
+      document.getElementById('existingReviews').style.display = 'block';
+      movieReviews.forEach((r, index) => {
+        const div = document.createElement('div');
+        div.className = 'review-item';
+        div.innerHTML = `
+          <div><strong>${r.rating}/10</strong> — ${r.text} <small>(${r.date})</small></div>
+          <button class="delete-btn" onclick="deleteReview(${movieId}, ${index})">Delete</button>
+        `;
+        container.appendChild(div);
+      });
     }
 
-    function submitReview() {
+    function deleteReview(movieId, index) {
+      if (confirm("Delete this review?")) {
+        reviews[movieId].splice(index, 1);
+        if (reviews[movieId].length === 0) delete reviews[movieId];
+        localStorage.setItem('cineReviews', JSON.stringify(reviews));
+        renderMovieReviews(movieId);
+        renderAllReviews(); // update My Reviews page too
+      }
+    }
+
+    function submitReview() { /* same as before */ 
       const text = document.getElementById('userReview').value.trim();
       const rating = parseInt(document.getElementById('userRating').value);
       if (!text || !rating) return alert("Please add review and rating.");
@@ -163,18 +174,21 @@
       reviews[currentMovie.id].push({ rating, text, date: new Date().toLocaleDateString() });
 
       localStorage.setItem('cineReviews', JSON.stringify(reviews));
-      alert(`✅ Review saved for "${currentMovie.title}"!`);
+      alert(`✅ Review saved!`);
       closeModal();
       showReviewModal(currentMovie);
+    }
+
+    function closeModal() {
+      document.getElementById('reviewModal').style.display = 'none';
+      document.getElementById('userReview').value = '';
+      document.getElementById('userRating').value = '';
     }
 
     function showSection(section) {
       document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
       document.getElementById('myReviewsSection').style.display = section === 'myreviews' ? 'block' : 'none';
-      
-      if (section === 'myreviews') {
-        renderAllReviews();
-      }
+      if (section === 'myreviews') renderAllReviews();
     }
 
     function renderAllReviews() {
@@ -184,18 +198,19 @@
 
       Object.keys(reviews).forEach(movieId => {
         const movieReviews = reviews[movieId];
-        movieReviews.forEach(r => {
+        movieReviews.forEach((r, index) => {
           hasReviews = true;
           const div = document.createElement('div');
           div.className = 'review-item';
-          div.innerHTML = `<strong>${r.rating}/10</strong> — ${r.text} <small>(${r.date})</small>`;
+          div.innerHTML = `
+            <div><strong>${r.rating}/10</strong> — ${r.text} <small>(${r.date})</small></div>
+            <button class="delete-btn" onclick="deleteReview(${movieId}, ${index}); renderAllReviews();">Delete</button>
+          `;
           container.appendChild(div);
         });
       });
 
-      if (!hasReviews) {
-        container.innerHTML = '<p style="text-align:center; color:#aaa;">You haven\'t written any reviews yet.</p>';
-      }
+      if (!hasReviews) container.innerHTML = '<p style="text-align:center; color:#aaa;">No reviews yet. Start reviewing movies!</p>';
     }
 
     window.onload = () => {
