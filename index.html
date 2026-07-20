@@ -198,33 +198,16 @@
       document.getElementById('reviewModal').style.display = 'none';
     }
 
-        function showSection(section) {
+    function showSection(section) {
       if (section === 'myreviews' && !auth.currentUser) {
         showAuthModal();
         return;
       }
       document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
       document.getElementById('myReviewsSection').style.display = section === 'myreviews' ? 'block' : 'none';
-      if (section === 'myreviews') loadMyReviews();
-    }
-      document.getElementById('homeSection').style.display = section === 'home' ? 'block' : 'none';
-      document.getElementById('myReviewsSection').style.display = section === 'myreviews' ? 'block' : 'none';
     }
 
-        async function loadMyReviews() {
-      const container = document.getElementById('allReviewsContainer');
-      container.innerHTML = '<p>Loading your reviews...</p>';
-      const snapshot = await db.collection('reviews').where('userId', '==', auth.currentUser.uid).get();
-      container.innerHTML = '';
-      snapshot.forEach(doc => {
-        const r = doc.data();
-        const div = document.createElement('div');
-        div.className = 'review-item';
-        div.innerHTML = `<strong>${r.rating}/10</strong> - ${r.text} <small>(${r.movieTitle})</small> [${r.status || 'pending'}]`;
-        container.appendChild(div);
-      });
-      if (!snapshot.size) container.innerHTML = '<p>No reviews yet.</p>';
-    }window.onload = () => {
+    window.onload = () => {
       showSection('home');
       loadPopular();
       document.getElementById('searchInput').addEventListener('input', searchMovies);
